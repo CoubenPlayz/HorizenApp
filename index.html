@@ -56,7 +56,7 @@
   .home{
     position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;
     padding:calc(66px + env(safe-area-inset-top,0px)) 26px calc(30px + env(safe-area-inset-bottom,0px));
-    max-width:520px;margin:0 auto;left:0;right:0;
+    max-width:560px;margin:0 auto;left:0;right:0;
     opacity:0;pointer-events:none;transition:opacity .45s ease .15s;
   }
   .awake .home{opacity:1;pointer-events:auto}
@@ -78,7 +78,10 @@
   .w-search span{flex:1;text-align:left;color:rgba(244,245,247,.85)}
   .w-search svg:last-child{opacity:.5}
 
-  .apps{display:flex;justify-content:center;gap:clamp(28px,6vw,52px);margin-top:auto;margin-bottom:auto;padding:26px 0}
+  .apps{
+    display:flex;flex-wrap:wrap;justify-content:center;align-content:center;
+    gap:clamp(24px,5vw,48px);margin-top:auto;margin-bottom:auto;padding:26px 0;
+  }
   .app{display:flex;flex-direction:column;align-items:center;gap:9px}
   .icon{
     width:clamp(66px,11vmin,88px);height:clamp(66px,11vmin,88px);border-radius:25px;position:relative;
@@ -104,20 +107,29 @@
     box-shadow:0 0 9px 1px rgba(242,163,60,.4);
   }
 
-  /* Geometry Dash — icon pulled from the HorizenApp repo (raw URL) */
-  .icon-gd{background:#141821}
-  .icon-gd img{width:100%;height:100%;object-fit:cover;display:block}
-  .gd-fallback{display:none;font-size:26px;font-weight:700;letter-spacing:1px}
-  .icon-gd.broken img{display:none}
-  .icon-gd.broken .gd-fallback{display:block}
+  /* HorizenMaps — drawn inline: folded map + amber pin (matches the H icon) */
+  .icon-maps{background:#10131a}
+  .icon-maps svg{display:block}
+
+  /* shared style for every image-based icon (GD, News, AI, Bloxd) */
+  .icon-img{background:#141821}
+  .icon-img img{width:100%;height:100%;object-fit:cover;display:block}
+  .img-fallback{display:none;font-size:26px;font-weight:700;letter-spacing:1px}
+  .icon-img.broken img{display:none}
+  .icon-img.broken .img-fallback{display:block}
 
   .cred{margin-top:auto;text-align:center;font-size:10.5px;letter-spacing:.5px;color:rgba(255,255,255,.42)}
 
   /* entrance choreography on load */
   .awake .widget{animation:rise .5s .04s backwards}
-  .awake .app:nth-child(1){animation:pop .5s .14s backwards}
-  .awake .app:nth-child(2){animation:pop .5s .22s backwards}
-  .awake .cred{animation:rise .5s .3s backwards}
+  .awake .app{animation:pop .5s backwards}
+  .awake .app:nth-child(1){animation-delay:.14s}
+  .awake .app:nth-child(2){animation-delay:.20s}
+  .awake .app:nth-child(3){animation-delay:.26s}
+  .awake .app:nth-child(4){animation-delay:.32s}
+  .awake .app:nth-child(5){animation-delay:.38s}
+  .awake .app:nth-child(6){animation-delay:.44s}
+  .awake .cred{animation:rise .5s .5s backwards}
   @keyframes pop{from{opacity:0;transform:translateY(16px) scale(.86)}to{opacity:1;transform:none}}
   @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 
@@ -195,13 +207,55 @@
         <span class="icon icon-h"><span class="h-mark">H<i></i></span></span>
         <span class="label">HorizenSearch</span>
       </button>
+
       <button class="app" data-app="gd">
-        <span class="icon icon-gd">
+        <span class="icon icon-img">
           <img src="https://raw.githubusercontent.com/TheCoder-creator/HorizenApp/main/images/geo-dash.png"
-               alt="Geometry Dash" onerror="this.closest('.icon-gd').classList.add('broken')" />
-          <span class="gd-fallback">GD</span>
+               alt="Geometry Dash" onerror="this.closest('.icon-img').classList.add('broken')" />
+          <span class="img-fallback">GD</span>
         </span>
         <span class="label">Geometry Dash</span>
+      </button>
+
+      <button class="app" data-app="news">
+        <span class="icon icon-img">
+          <img src="https://raw.githubusercontent.com/TheCoder-creator/HorizenApp/main/images/news.png"
+               alt="HorizenNews" onerror="this.closest('.icon-img').classList.add('broken')" />
+          <span class="img-fallback">HN</span>
+        </span>
+        <span class="label">HorizenNews</span>
+      </button>
+
+      <button class="app" data-app="ai">
+        <span class="icon icon-img">
+          <img src="https://raw.githubusercontent.com/TheCoder-creator/HorizenApp/main/images/ai.png"
+               alt="HorizenAI" onerror="this.closest('.icon-img').classList.add('broken')" />
+          <span class="img-fallback">AI</span>
+        </span>
+        <span class="label">HorizenAI</span>
+      </button>
+
+      <button class="app" data-app="bloxd">
+        <span class="icon icon-img">
+          <img src="https://raw.githubusercontent.com/TheCoder-creator/HorizenApp/main/images/bloxd.png"
+               alt="Bloxd.io" onerror="this.closest('.icon-img').classList.add('broken')" />
+          <span class="img-fallback">BX</span>
+        </span>
+        <span class="label">Bloxd.io</span>
+      </button>
+
+      <button class="app" data-app="maps">
+        <span class="icon icon-maps">
+          <svg viewBox="0 0 40 40" width="42" height="42" aria-hidden="true">
+            <g fill="none" stroke="#e8ecf4" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+              <path d="M14 8 6 10.6v22L14 30l12 2.6 8-2.6v-22L26 10.6 14 8z"/>
+              <path d="M14 8v22m12-19.4v22"/>
+            </g>
+            <path d="M20 24.5c3.1-2.4 5-4.9 5-7.6a5 5 0 1 0-10 0c0 2.7 1.9 5.2 5 7.6z" fill="#f2a33c"/>
+            <circle cx="20" cy="16.6" r="1.8" fill="#10131a"/>
+          </svg>
+        </span>
+        <span class="label">HorizenMaps</span>
       </button>
     </div>
 
@@ -279,7 +333,11 @@
 
   const APPS = {
     horizen: { name: 'HorizenSearch', url: 'https://horizensearch.com/' },
-    gd:      { name: 'Geometry Dash', url: 'https://horizensearch.com/gd' }
+    gd:      { name: 'Geometry Dash', url: 'https://horizensearch.com/gd' },
+    news:    { name: 'HorizenNews',   url: 'https://news.horizensearch.com' },
+    ai:      { name: 'HorizenAI',     url: 'https://ai.horizensearch.com' },
+    bloxd:   { name: 'Bloxd.io',      url: 'https://bloxd.com' },
+    maps:    { name: 'HorizenMaps',   url: 'https://maps.horizensearch.com' }
   };
 
   /* ---------- live clock / date / timezone ---------- */

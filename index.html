@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#08090b" />
+<title>Horizen · Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  /* ---------- base ---------- */
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:'Sora',sans-serif;color:#f4f5f7;
+    background:radial-gradient(1100px 700px at 50% 40%, #131519 0%, #08090b 62%);
+    min-height:100vh;min-height:100dvh;
+    overflow:hidden;user-select:none;-webkit-user-select:none;
+  }
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-action:manipulation}
+  a{color:inherit}
+
+  /* ---------- screen (fills whatever space it's given) ---------- */
+  .screen{position:relative;width:100vw;height:100vh;height:100dvh;overflow:hidden;background:#0b0d12}
+
+  /* ---------- wallpaper ---------- */
+  .wallpaper{
+    position:absolute;inset:0;z-index:0;background:#0b0d12;
+    background-size:cover;background-position:center;
+    opacity:0;transform:scale(1.08);transition:opacity 1.1s ease,transform 1.6s ease;
+  }
+  .wallpaper.ready{opacity:1;transform:scale(1)}
+  .shade{ /* legibility scrim over the photo */
+    position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:linear-gradient(180deg,rgba(6,7,10,.52) 0%,rgba(6,7,10,.14) 30%,rgba(6,7,10,.18) 60%,rgba(6,7,10,.62) 100%);
+  }
+
+  /* ---------- status bar / home bar ---------- */
+  .statusbar{
+    position:absolute;top:0;left:0;right:0;z-index:56;height:54px;
+    display:flex;align-items:flex-end;justify-content:space-between;
+    padding:calc(10px + env(safe-area-inset-top,0px)) 27px 10px;pointer-events:none;
+  }
+  .sb-time{font-size:15px;font-weight:600;letter-spacing:.2px;font-variant-numeric:tabular-nums}
+  .sb-icons{display:flex;align-items:center;gap:7px}
+  .homebar{
+    position:absolute;bottom:9px;left:50%;transform:translateX(-50%);
+    width:132px;height:5px;border-radius:3px;background:rgba(255,255,255,.9);
+    z-index:76;pointer-events:none;transition:background .2s;
+  }
+  .app-open .homebar{pointer-events:auto;cursor:pointer}
+  .app-open .homebar:hover{background:#fff}
+
+  /* ---------- home screen ---------- */
+  .home{
+    position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;
+    padding:calc(66px + env(safe-area-inset-top,0px)) 26px calc(30px + env(safe-area-inset-bottom,0px));
+    max-width:520px;margin:0 auto;left:0;right:0;
+    opacity:0;pointer-events:none;transition:opacity .45s ease .15s;
+  }
+  .awake .home{opacity:1;pointer-events:auto}
+
+  .widget{
+    background:rgba(15,17,23,.52);border:1px solid rgba(255,255,255,.13);
+    backdrop-filter:blur(20px) saturate(1.35);-webkit-backdrop-filter:blur(20px) saturate(1.35);
+    border-radius:26px;padding:18px 18px 12px;box-shadow:0 20px 44px rgba(0,0,0,.3);
+  }
+  .w-top{display:flex;align-items:flex-end;justify-content:space-between;padding:2px 4px 14px}
+  .w-time{font-size:46px;font-weight:300;letter-spacing:-1.5px;line-height:.95;font-variant-numeric:tabular-nums}
+  .w-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:11.5px;color:rgba(244,245,247,.65);text-align:right}
+  .w-search{
+    display:flex;align-items:center;gap:10px;width:100%;padding:11px 14px;border-radius:15px;
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);
+    font-size:13px;font-weight:500;transition:background .2s;
+  }
+  .w-search:hover{background:rgba(255,255,255,.15)}
+  .w-search span{flex:1;text-align:left;color:rgba(244,245,247,.85)}
+  .w-search svg:last-child{opacity:.5}
+
+  .apps{display:flex;justify-content:center;gap:clamp(28px,6vw,52px);margin-top:auto;margin-bottom:auto;padding:26px 0}
+  .app{display:flex;flex-direction:column;align-items:center;gap:9px}
+  .icon{
+    width:clamp(66px,11vmin,88px);height:clamp(66px,11vmin,88px);border-radius:25px;position:relative;
+    display:grid;place-items:center;overflow:hidden;
+    box-shadow:0 16px 32px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.18),inset 0 0 0 1px rgba(255,255,255,.09);
+    transition:transform .2s cubic-bezier(.3,.8,.4,1.4),box-shadow .2s;
+  }
+  .app:hover .icon{transform:translateY(-5px) scale(1.05);box-shadow:0 24px 44px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.18),inset 0 0 0 1px rgba(255,255,255,.12)}
+  .app:active .icon{transform:scale(.92)}
+  .label{
+    font-size:12.5px;font-weight:500;color:rgba(255,255,255,.95);
+    text-shadow:0 1px 10px rgba(0,0,0,.6);max-width:96px;text-align:center;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+
+  /* HorizenSearch — big H over a horizon line with a rising sun */
+  .icon-h{background:#10131a}
+  .h-mark{position:relative;font-size:35px;font-weight:700;line-height:1;letter-spacing:-1px;padding-bottom:7px}
+  .h-mark i{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);width:34px;height:2px;border-radius:2px;background:#f2a33c}
+  .h-mark i::after{
+    content:"";position:absolute;left:50%;top:-4px;transform:translateX(-50%);
+    width:7px;height:7px;border-radius:50%;background:#f2a33c;
+    box-shadow:0 0 9px 1px rgba(242,163,60,.4);
+  }
+
+  /* Geometry Dash — icon pulled from the HorizenApp repo (raw URL) */
+  .icon-gd{background:#141821}
+  .icon-gd img{width:100%;height:100%;object-fit:cover;display:block}
+  .gd-fallback{display:none;font-size:26px;font-weight:700;letter-spacing:1px}
+  .icon-gd.broken img{display:none}
+  .icon-gd.broken .gd-fallback{display:block}
+
+  .cred{margin-top:auto;text-align:center;font-size:10.5px;letter-spacing:.5px;color:rgba(255,255,255,.42)}
+
+  /* entrance choreography on load */
+  .awake .widget{animation:rise .5s .04s backwards}
+  .awake .app:nth-child(1){animation:pop .5s .14s backwards}
+  .awake .app:nth-child(2){animation:pop .5s .22s backwards}
+  .awake .cred{animation:rise .5s .3s backwards}
+  @keyframes pop{from{opacity:0;transform:translateY(16px) scale(.86)}to{opacity:1;transform:none}}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  /* ---------- in-phone app window ---------- */
+  .appview{
+    position:absolute;inset:0;z-index:70;display:flex;flex-direction:column;
+    background:#0b0d12;border-radius:64px;transform:scale(.15);opacity:0;pointer-events:none;
+    transition:transform .5s cubic-bezier(.32,.72,.24,1),opacity .3s ease,border-radius .5s cubic-bezier(.32,.72,.24,1);
+    will-change:transform;
+  }
+  .appview.shown{transform:scale(1);opacity:1;pointer-events:auto;border-radius:0}
+  .appbar{
+    flex:none;height:52px;display:flex;align-items:center;gap:8px;padding:0 10px 0 18px;
+    background:rgba(14,16,21,.96);border-bottom:1px solid rgba(255,255,255,.07);
+  }
+  .appbar strong{flex:1;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ab-actions{display:flex;gap:6px}
+  .ab-btn{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:rgba(255,255,255,.85);transition:background .2s}
+  .ab-btn:hover{background:rgba(255,255,255,.1)}
+  .stage{flex:1;position:relative}
+  .stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0b0d12}
+  .loader{
+    position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:16px;background:#0b0d12;transition:opacity .35s ease;
+  }
+  .loader.off{opacity:0;pointer-events:none}
+  .ring{width:36px;height:36px;border-radius:50%;border:3px solid rgba(255,255,255,.13);border-top-color:#f2a33c;animation:spin .9s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loadtxt{font-size:12.5px;color:rgba(255,255,255,.5)}
+  .slow{display:none;font-size:12px;color:rgba(255,255,255,.65);padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.15)}
+  .slow.show{display:block}
+  .slow u{color:#f2a33c;text-underline-offset:3px}
+
+  /* ---------- long-press context menu ---------- */
+  .ctx{
+    position:absolute;z-index:80;min-width:190px;padding:6px;border-radius:16px;
+    background:rgba(24,26,33,.88);border:1px solid rgba(255,255,255,.14);
+    backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);
+    box-shadow:0 22px 55px rgba(0,0,0,.55);
+    opacity:0;transform:scale(.92);transform-origin:top left;pointer-events:none;
+    transition:opacity .16s ease,transform .16s ease;
+  }
+  .ctx.show{opacity:1;transform:scale(1);pointer-events:auto}
+  .ctx-item{display:flex;align-items:center;gap:11px;width:100%;padding:11px 12px;border-radius:11px;font-size:13px;font-weight:500;text-align:left;transition:background .15s}
+  .ctx-item:hover{background:rgba(255,255,255,.09)}
+  .ctx-item svg{opacity:.65;flex:none}
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  }
+</style>
+</head>
+<body>
+
+<div class="screen" id="screen">
+  <div class="wallpaper" id="wallpaper"></div>
+  <div class="shade"></div>
+
+  <!-- ============ HOME ============ -->
+  <main class="home">
+    <section class="widget">
+      <div class="w-top">
+        <div class="w-time" id="wTime">--:--</div>
+        <div class="w-meta"><span id="wDate">—</span><span id="wZone">—</span></div>
+      </div>
+      <button class="w-search" data-app="horizen">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="6.3" cy="6.3" r="4.6"/><path d="m9.9 9.9 3.4 3.4"/></svg>
+        <span>Search the web</span>
+        <svg width="7" height="12" viewBox="0 0 7 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m1 1 5 5-5 5"/></svg>
+      </button>
+    </section>
+
+    <div class="apps">
+      <button class="app" data-app="horizen">
+        <span class="icon icon-h"><span class="h-mark">H<i></i></span></span>
+        <span class="label">HorizenSearch</span>
+      </button>
+      <button class="app" data-app="gd">
+        <span class="icon icon-gd">
+          <img src="https://raw.githubusercontent.com/TheCoder-creator/HorizenApp/main/images/geo-dash.png"
+               alt="Geometry Dash" onerror="this.closest('.icon-gd').classList.add('broken')" />
+          <span class="gd-fallback">GD</span>
+        </span>
+        <span class="label">Geometry Dash</span>
+      </button>
+    </div>
+
+    <p class="cred" id="cred">Photo · Pexels</p>
+  </main>
+
+  <!-- ============ STATUS BAR ============ -->
+  <header class="statusbar">
+    <span class="sb-time" id="sbTime">--:--</span>
+    <span class="sb-icons" aria-hidden="true">
+      <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect y="7.2" width="3.2" height="4.8" rx="1"/><rect x="4.9" y="4.9" width="3.2" height="7.1" rx="1"/><rect x="9.8" y="2.4" width="3.2" height="9.6" rx="1"/><rect x="14.7" width="3.2" height="12" rx="1"/></svg>
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M1.6 4.3C3.5 2.5 5.9 1.5 8.5 1.5s5 1 6.9 2.8"/><path d="M3.9 6.9c1.3-1.1 2.9-1.7 4.6-1.7s3.3.6 4.6 1.7"/><path d="M6.4 9.4c.6-.5 1.3-.8 2.1-.8s1.5.3 2.1.8"/><circle cx="8.5" cy="10.7" r=".9" fill="currentColor" stroke="none"/></svg>
+      <svg width="26" height="13" viewBox="0 0 26 13" fill="none">
+        <rect x=".75" y=".75" width="21" height="11.5" rx="3.2" stroke="currentColor" opacity=".45"/>
+        <rect id="battFill" x="2.2" y="2.2" width="17.5" height="8.6" rx="1.7" fill="currentColor"/>
+        <path d="M23.6 4.3v4.4c1.1-.35 1.8-1.2 1.8-2.2s-.7-1.85-1.8-2.2z" fill="currentColor" opacity=".45"/>
+        <path id="battBolt" d="M11.7 2.4 8.6 7h2.2l-.9 3.4 3.6-4.9h-2.2l.4-3.1z" fill="#0b0d11" style="display:none"/>
+      </svg>
+    </span>
+  </header>
+
+  <div class="homebar" id="homebar" title="Home"></div>
+
+  <!-- ============ APP WINDOW ============ -->
+  <section class="appview" id="appview" aria-hidden="true">
+    <header class="appbar">
+      <strong id="appName">App</strong>
+      <div class="ab-actions">
+        <a class="ab-btn" id="extLink" href="#" target="_blank" rel="noopener" title="Open in a new tab">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3H3.4A1.4 1.4 0 0 0 2 4.4v7.2A1.4 1.4 0 0 0 3.4 13h7.2a1.4 1.4 0 0 0 1.4-1.4V9"/><path d="M9 2h4v4"/><path d="M13 2 7.5 7.5"/></svg>
+        </a>
+        <button class="ab-btn" id="closeApp" title="Close app">
+          <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l10 10M12 2 2 12"/></svg>
+        </button>
+      </div>
+    </header>
+    <div class="stage">
+      <iframe id="appFrame" title="App content" allow="autoplay; fullscreen; gamepad *"></iframe>
+      <div class="loader" id="loader">
+        <span class="ring"></span>
+        <span class="loadtxt">Loading…</span>
+        <button class="slow" id="slowNote">Taking long? <u>Open in a new tab</u></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LONG-PRESS MENU ============ -->
+  <div class="ctx" id="ctx" role="menu">
+    <button class="ctx-item" id="ctxOpen" role="menuitem">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 1.5 5 4.5-5 4.5"/></svg>
+      <span>Open</span>
+    </button>
+    <button class="ctx-item" id="ctxNew" role="menuitem">
+      <svg width="14" height="14" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3H3.4A1.4 1.4 0 0 0 2 4.4v7.2A1.4 1.4 0 0 0 3.4 13h7.2a1.4 1.4 0 0 0 1.4-1.4V9"/><path d="M9 2h4v4"/><path d="M13 2 7.5 7.5"/></svg>
+      <span>Open in new tab</span>
+    </button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const screen = $('screen'), wallpaper = $('wallpaper'),
+        sbTime = $('sbTime'),
+        wTime = $('wTime'), wDate = $('wDate'), wZone = $('wZone'), cred = $('cred'),
+        appview = $('appview'), appName = $('appName'), appFrame = $('appFrame'),
+        loader = $('loader'), slowNote = $('slowNote'), extLink = $('extLink'),
+        closeBtn = $('closeApp'), homebar = $('homebar'),
+        ctx = $('ctx'), ctxOpen = $('ctxOpen'), ctxNew = $('ctxNew'),
+        battFill = $('battFill'), battBolt = $('battBolt');
+
+  const PEXELS_KEY = 'QmebQALowGk9LoYQqUGaPhQ5zUMQWwd1mRaFTV4HvNQyYS1i6v9H5V68';
+  const FALLBACK_WALLPAPER = 'https://images.pexels.com/photos/924824/pexels-photo-924824.jpeg?auto=compress&cs=tinysrgb&w=1080&h=1920&fit=crop';
+  const QUERIES = ['aurora borealis','mountain landscape','starry night sky','ocean waves','forest fog','desert dunes'];
+
+  const APPS = {
+    horizen: { name: 'HorizenSearch', url: 'https://horizensearch.com/' },
+    gd:      { name: 'Geometry Dash', url: 'https://horizensearch.com/gd' }
+  };
+
+  /* ---------- live clock / date / timezone ---------- */
+  const two = n => String(n).padStart(2, '0');
+  function tick(){
+    const d = new Date(), h24 = d.getHours(), h = h24 % 12 || 12;
+    const t = h + ':' + two(d.getMinutes());
+    sbTime.textContent = t;
+    wTime.textContent = t;
+    const ds = d.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+    wDate.textContent = ds;
+    const off = -d.getTimezoneOffset() / 60;
+    wZone.textContent = 'GMT' + (off >= 0 ? '+' : '') + (Number.isInteger(off) ? off : off.toFixed(1));
+  }
+  tick(); setInterval(tick, 1000);
+
+  /* ---------- real battery when the browser exposes it ---------- */
+  function drawBattery(level, charging){
+    battFill.setAttribute('width', (17.5 * Math.min(1, Math.max(0, level))).toFixed(1));
+    battBolt.style.display = charging ? '' : 'none';
+  }
+  drawBattery(1, false);
+  if (navigator.getBattery){
+    navigator.getBattery().then(b => {
+      const upd = () => drawBattery(b.level, b.charging);
+      b.addEventListener('levelchange', upd);
+      b.addEventListener('chargingchange', upd);
+      upd();
+    }).catch(() => {});
+  }
+
+  /* ---------- Pexels wallpaper (random query + page, with fallback) ---------- */
+  function setWallpaper(url, author){
+    const img = new Image();
+    img.onload = () => {
+      wallpaper.style.backgroundImage = 'url("' + url + '")';
+      wallpaper.classList.add('ready');
+      cred.textContent = author ? 'Photo · ' + author + ' · Pexels' : 'Photo · Pexels';
+    };
+    img.onerror = () => { if (url !== FALLBACK_WALLPAPER) setWallpaper(FALLBACK_WALLPAPER, null); };
+    img.src = url;
+  }
+  (async () => {
+    try {
+      const q = QUERIES[Math.floor(Math.random() * QUERIES.length)];
+      const page = 1 + Math.floor(Math.random() * 20);
+      const res = await fetch(
+        'https://api.pexels.com/v1/search?query=' + encodeURIComponent(q) +
+        '&per_page=30&orientation=portrait&page=' + page,
+        { headers: { Authorization: PEXELS_KEY } }
+      );
+      if (!res.ok) throw new Error('pexels ' + res.status);
+      const photos = (await res.json()).photos || [];
+      if (!photos.length) throw new Error('empty');
+      const p = photos[Math.floor(Math.random() * photos.length)];
+      setWallpaper(p.src.portrait || p.src.large, p.photographer);
+    } catch { setWallpaper(FALLBACK_WALLPAPER, null); }
+  })();
+
+  /* ---------- boot straight to home ---------- */
+  screen.classList.add('awake');
+
+  /* ---------- app window (zoom-open iframe) ---------- */
+  let loadedOnce = false, currentUrl = '', slowTimer = null;
+
+  function openApp(id, trigger){
+    const app = APPS[id];
+    if (!app) return;
+    hideCtx();
+    appName.textContent = app.name;
+    extLink.href = app.url;
+    currentUrl = app.url;
+
+    if (appFrame.getAttribute('src') !== app.url){
+      loadedOnce = false;
+      appFrame.src = app.url;
+      loader.classList.remove('off');
+      slowNote.classList.remove('show');
+      clearTimeout(slowTimer);
+      slowTimer = setTimeout(() => slowNote.classList.add('show'), 9000);
+    } else {
+      loader.classList.toggle('off', loadedOnce);
+    }
+
+    /* grow the window out of the tapped icon */
+    const icon = (trigger && trigger.querySelector('.icon')) || trigger;
+    if (icon && icon.getBoundingClientRect){
+      const pr = screen.getBoundingClientRect(), ir = icon.getBoundingClientRect();
+      if (ir.width) appview.style.transformOrigin =
+        (ir.left - pr.left + ir.width / 2) + 'px ' + (ir.top - pr.top + ir.height / 2) + 'px';
+    }
+
+    appview.classList.add('shown');
+    appview.setAttribute('aria-hidden', 'false');
+    screen.classList.add('app-open');
+    setTimeout(() => { try { appFrame.contentWindow.focus(); } catch(_) { appFrame.focus(); } }, 600);
+  }
+  function closeApp(){
+    appview.classList.remove('shown');
+    appview.setAttribute('aria-hidden', 'true');
+    screen.classList.remove('app-open');
+  }
+
+  appFrame.addEventListener('load', () => {
+    if (!appFrame.getAttribute('src')) return;
+    loadedOnce = true;
+    loader.classList.add('off');
+    slowNote.classList.remove('show');
+    clearTimeout(slowTimer);
+  });
+
+  closeBtn.addEventListener('click', closeApp);
+  homebar.addEventListener('click', () => { if (screen.classList.contains('app-open')) closeApp(); });
+  slowNote.addEventListener('click', () => { if (currentUrl) window.open(currentUrl, '_blank', 'noopener'); });
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (ctx.classList.contains('show')) hideCtx();
+    else if (screen.classList.contains('app-open')) closeApp();
+  });
+
+  /* launch triggers: app icons + widget search pill */
+  document.querySelectorAll('[data-app]').forEach(el => {
+    el.addEventListener('click', () => {
+      if (ctx.classList.contains('show')) { hideCtx(); return; } // ignore click that ends a long-press
+      openApp(el.dataset.app, el);
+    });
+  });
+
+  /* ---------- long-press (or right-click) an icon for options ---------- */
+  let ctxApp = null, lpTimer = null, lpStart = null;
+
+  function showCtx(appEl){
+    ctxApp = appEl.dataset.app;
+    const pr = screen.getBoundingClientRect(), ir = appEl.querySelector('.icon').getBoundingClientRect();
+    const mw = 190, mh = 104;
+    let x = ir.left - pr.left + ir.width / 2 - mw / 2;
+    x = Math.max(12, Math.min(x, pr.width - mw - 12));
+    let y = ir.bottom - pr.top + 10;
+    if (y + mh > pr.height - 20) y = ir.top - pr.top - mh - 10;
+    ctx.style.left = x + 'px';
+    ctx.style.top = y + 'px';
+    ctx.classList.add('show');
+    if (navigator.vibrate) navigator.vibrate(6);
+  }
+  function hideCtx(){ ctx.classList.remove('show'); }
+
+  document.querySelectorAll('.app').forEach(el => {
+    el.addEventListener('pointerdown', e => {
+      lpStart = { x: e.clientX, y: e.clientY };
+      clearTimeout(lpTimer);
+      lpTimer = setTimeout(() => showCtx(el), 450);
+    });
+    el.addEventListener('pointermove', e => {
+      if (lpStart && Math.hypot(e.clientX - lpStart.x, e.clientY - lpStart.y) > 8){
+        clearTimeout(lpTimer); lpStart = null;
+      }
+    });
+    ['pointerup','pointerleave','pointercancel'].forEach(ev =>
+      el.addEventListener(ev, () => { clearTimeout(lpTimer); lpStart = null; }));
+    el.addEventListener('contextmenu', e => { e.preventDefault(); showCtx(el); });
+  });
+
+  ctxOpen.addEventListener('click', () => { const a = ctxApp; hideCtx(); if (a) openApp(a, null); });
+  ctxNew.addEventListener('click', () => {
+    const a = ctxApp; hideCtx();
+    if (a && APPS[a]) window.open(APPS[a].url, '_blank', 'noopener');
+  });
+  document.addEventListener('pointerdown', e => {
+    if (ctx.classList.contains('show') && !ctx.contains(e.target)) hideCtx();
+  }, true);
+})();
+</script>
+</body>
+</html>

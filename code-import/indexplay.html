@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Horizen Play</title>
+<style>
+  :root{ --red:#ff0000; --bg:#0f0f0f; --panel:#181818; --text:#f1f1f1; --sub:#aaaaaa; --border:#303030; --hover:#272727; }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--text); font-family:'Roboto',-apple-system,Arial,sans-serif; height:100vh; overflow:hidden;}
+  #topbar{height:56px; display:flex; align-items:center; gap:20px; padding:0 16px; border-bottom:1px solid var(--border); background:var(--bg);}
+  #hamburger{width:24px; height:18px; display:flex; flex-direction:column; justify-content:space-between; cursor:pointer;}
+  #hamburger span{height:2px; background:var(--text); display:block;}
+  #logo{display:flex; align-items:center; gap:4px; font-size:20px; font-weight:700; cursor:pointer; white-space:nowrap;}
+  #logo .mark{background:var(--red); color:#fff; width:30px; height:21px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px;}
+  #searchWrap{flex:1; display:flex; justify-content:center;}
+  #searchForm{display:flex; width:100%; max-width:600px;}
+  #searchInput{flex:1; background:var(--bg); border:1px solid var(--border); border-right:none; color:var(--text); padding:8px 16px; border-radius:20px 0 0 20px; outline:none; font-size:15px;}
+  #searchInput:focus{border-color:#1c62b9;}
+  #searchBtn{width:64px; background:#222; border:1px solid var(--border); border-radius:0 20px 20px 0; cursor:pointer; color:var(--text); font-size:16px;}
+  #main{display:grid; grid-template-columns:72px 1fr; height:calc(100vh - 56px); overflow:hidden;}
+  #sidebar{border-right:1px solid var(--border); padding:8px 0; overflow-y:auto;}
+  .navitem{display:flex; flex-direction:column; align-items:center; gap:6px; padding:16px 0; cursor:pointer; font-size:10px; color:var(--sub);}
+  .navitem:hover{background:var(--hover); color:var(--text);}
+  .navitem .ic{font-size:20px;}
+  #content{overflow-y:auto; padding:20px 24px;}
+  .chipRow{display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;}
+  .chip{background:#272727; padding:7px 14px; border-radius:8px; font-size:13px; cursor:pointer; white-space:nowrap;}
+  .chip.active{background:var(--text); color:#0f0f0f;}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:24px 16px;}
+  .card{cursor:pointer;}
+  .thumb{width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:12px; background:#222; display:block;}
+  .card .info{display:flex; gap:10px; margin-top:10px;}
+  .card .title{font-size:14px; font-weight:600; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+  .card .chan{font-size:12px; color:var(--sub); margin-top:4px;}
+  .card .stats{font-size:12px; color:var(--sub);}
+  #searchList .row{display:flex; gap:16px; padding:10px 0; cursor:pointer;}
+  #searchList .row img{width:280px; aspect-ratio:16/9; object-fit:cover; border-radius:10px; background:#222; flex-shrink:0;}
+  #searchList .row .title{font-size:16px; font-weight:600; margin-bottom:6px;}
+  #searchList .row .meta{font-size:13px; color:var(--sub); margin-bottom:8px;}
+  #searchList .row .desc{font-size:13px; color:var(--sub); line-height:1.4;}
+  #watchView{display:none; grid-template-columns:1fr 380px; gap:24px; max-width:1600px;}
+  #watchView.active{display:grid;}
+  #playerWrap{position:relative; width:100%; aspect-ratio:16/9; background:#000; border-radius:12px; overflow:hidden;}
+  #ytplayer{width:100%; height:100%;}
+  #watchTitle{font-size:18px; font-weight:700; margin-top:14px;}
+  #watchMeta{color:var(--sub); font-size:13px; margin:8px 0 14px; display:flex; justify-content:space-between;}
+  #watchDesc{background:var(--panel); border-radius:12px; padding:14px; font-size:13px; color:var(--sub); line-height:1.5; white-space:pre-wrap; max-height:120px; overflow-y:auto;}
+  #upNext .row{display:flex; gap:8px; padding:6px 0; cursor:pointer;}
+  #upNext .row img{width:160px; aspect-ratio:16/9; object-fit:cover; border-radius:8px; background:#222; flex-shrink:0;}
+  #upNext .row .title{font-size:13px; font-weight:600; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+  #upNext .row .chan{font-size:12px; color:var(--sub); margin-top:4px;}
+  #msg{color:var(--sub); padding:30px 0; font-size:14px;}
+  #accountBtn{width:32px; height:32px; border-radius:50%; background:#3a3a3a; border:none; color:var(--text); cursor:pointer; font-size:14px; flex-shrink:0; margin-left:auto;}
+  #accountBtn:hover{filter:brightness(1.2);}
+  #shortsFeed{max-width:420px; margin:0 auto; display:flex; flex-direction:column; gap:16px;}
+  .shortCard{position:relative; width:100%; aspect-ratio:9/16; border-radius:16px; overflow:hidden; background:#000; cursor:pointer;}
+  .shortCard img{width:100%; height:100%; object-fit:cover;}
+  .shortCard .ov{position:absolute; left:0; right:0; bottom:0; padding:14px; background:linear-gradient(0deg, rgba(0,0,0,.85), transparent); font-size:13px;}
+  .shortCard .ov .t{font-weight:600; line-height:1.3; margin-bottom:4px;}
+  .shortCard .ov .c{color:#ccc; font-size:12px;}
+  .modalBg{display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:50; align-items:center; justify-content:center;}
+  .modalBg.active{display:flex;}
+  .modalCard{background:#fff; color:#0f0f0f; border-radius:16px; padding:36px 32px; width:360px; text-align:center;}
+  .modalCard .gicon{width:44px; height:44px; margin:0 auto 16px; background:#4285F4; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:18px;}
+  .modalCard h3{font-size:18px; margin-bottom:8px;}
+  .modalCard p{font-size:13px; color:#555; line-height:1.5; margin-bottom:22px;}
+  .modalCard button{width:100%; padding:11px; border-radius:20px; border:none; font-weight:600; font-size:14px; cursor:pointer;}
+  .modalCard .primary{background:#065fd4; color:#fff; margin-bottom:10px;}
+  .modalCard .secondary{background:#f1f1f1; color:#0f0f0f;}
+  #modalNote{font-size:11px; color:#999; margin-top:16px; line-height:1.4;}
+  ::-webkit-scrollbar{width:10px;} ::-webkit-scrollbar-thumb{background:#3a3a3a; border-radius:6px;}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div id="hamburger"><span></span><span></span><span></span></div>
+  <div id="logo"><span class="mark">▶</span>Horizen Play</div>
+  <div id="searchWrap">
+    <form id="searchForm">
+      <input id="searchInput" placeholder="Search">
+      <button id="searchBtn" type="submit">🔍</button>
+    </form>
+  </div>
+</div>
+
+<div id="main">
+  <div id="sidebar">
+    <div class="navitem" data-feed="home"><span class="ic">🏠</span>Home</div>
+    <div class="navitem" data-feed="mostPopular"><span class="ic">🔥</span>Trending</div>
+    <div class="navitem" id="navShorts"><span class="ic">⚡</span>Shorts</div>
+    <div class="navitem" data-feed="music"><span class="ic">🎵</span>Music</div>
+    <div class="navitem" data-feed="gaming"><span class="ic">🎮</span>Gaming</div>
+    <div class="navitem" data-feed="news"><span class="ic">📰</span>News</div>
+  </div>
+  <div id="content">
+    <div id="browseView">
+      <div class="chipRow" id="chipRow"></div>
+      <div id="msg"></div>
+      <div class="grid" id="grid"></div>
+    </div>
+    <div id="searchView" style="display:none">
+      <div id="msg2"></div>
+      <div id="searchList"></div>
+    </div>
+    <div id="shortsView" style="display:none">
+      <div id="shortsMsg"></div>
+      <div id="shortsFeed"></div>
+    </div>
+    <div id="watchView">
+      <div>
+        <div id="playerWrap"><div id="ytplayer"></div></div>
+        <div id="watchTitle"></div>
+        <div id="watchMeta"><span id="watchChan"></span><span id="watchStats"></span></div>
+        <div id="watchDesc"></div>
+      </div>
+      <div id="upNext"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_KEY = "AIzaSyDgir7W26YD_PaZjbxU2iWYTZhW4Vf_n84";
+const BASE = "https://www.googleapis.com/youtube/v3";
+
+function fmtNum(n){
+  n = parseInt(n||0);
+  if(n>=1e6) return (n/1e6).toFixed(1).replace(/\.0$/,'')+'M';
+  if(n>=1e3) return (n/1e3).toFixed(1).replace(/\.0$/,'')+'K';
+  return String(n);
+}
+function timeAgo(dateStr){
+  const s = (Date.now()-new Date(dateStr).getTime())/1000;
+  const units = [[31536000,'year'],[2592000,'month'],[86400,'day'],[3600,'hour'],[60,'minute']];
+  for(const [sec,label] of units){ const v=Math.floor(s/sec); if(v>=1) return v+' '+label+(v>1?'s':'')+' ago'; }
+  return 'just now';
+}
+async function ytFetch(path, params){
+  const url = new URL(BASE+path);
+  Object.entries({...params, key:API_KEY}).forEach(([k,v])=>url.searchParams.set(k,v));
+  const res = await fetch(url);
+  const data = await res.json();
+  if(!res.ok) throw new Error(data.error?.message || res.statusText);
+  return data;
+}
+
+function showView(id){
+  ['browseView','searchView','watchView','shortsView'].forEach(v=>{
+    const el = document.getElementById(v);
+    if(v==='watchView'){ el.classList.toggle('active', v===id); }
+    else{ el.style.display = (v===id) ? '' : 'none'; }
+  });
+}
+
+// ===== SHORTS =====
+async function loadShorts(){
+  showView('shortsView');
+  document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+  const feed = document.getElementById('shortsFeed'); feed.innerHTML='';
+  const msg = document.getElementById('shortsMsg'); msg.textContent = 'Loading…';
+  try{
+    const data = await ytFetch('/search', {part:'snippet', q:'shorts', type:'video', videoDuration:'short', maxResults:16});
+    msg.textContent = '';
+    if(!data.items?.length){ msg.textContent = 'No shorts found.'; return; }
+    data.items.forEach(v=>{
+      const sn = v.snippet;
+      const c = document.createElement('div'); c.className='shortCard';
+      c.innerHTML = `<img src="${sn.thumbnails?.high?.url||''}">
+        <div class="ov"><div class="t">${sn.title}</div><div class="c">${sn.channelTitle}</div></div>`;
+      c.onclick = () => watchVideo(v.id.videoId);
+      feed.appendChild(c);
+    });
+  }catch(e){ msg.textContent = 'Could not load shorts: ' + e.message; }
+}
+document.getElementById('navShorts').onclick = loadShorts;
+
+// ===== BROWSE (home feed by category) =====
+const CATS = [
+  {id:'home', label:'All', params:{chart:'mostPopular', regionCode:'US', maxResults:24}},
+  {id:'music', label:'Music', params:{chart:'mostPopular', regionCode:'US', videoCategoryId:'10', maxResults:24}},
+  {id:'gaming', label:'Gaming', params:{chart:'mostPopular', regionCode:'US', videoCategoryId:'20', maxResults:24}},
+  {id:'news', label:'News', params:{chart:'mostPopular', regionCode:'US', videoCategoryId:'25', maxResults:24}},
+];
+function renderChips(){
+  const row = document.getElementById('chipRow');
+  row.innerHTML = '';
+  CATS.forEach(c=>{
+    const el = document.createElement('div');
+    el.className = 'chip' + (c.id==='home' ? ' active':'');
+    el.textContent = c.label;
+    el.onclick = () => { document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active')); el.classList.add('active'); loadFeed(c.id); };
+    row.appendChild(el);
+  });
+}
+async function loadFeed(catId){
+  showView('browseView');
+  const grid = document.getElementById('grid'); grid.innerHTML='';
+  const msg = document.getElementById('msg'); msg.textContent = 'Loading…';
+  const cat = CATS.find(c=>c.id===catId) || CATS[0];
+  try{
+    const data = await ytFetch('/videos', {part:'snippet,statistics,contentDetails', ...cat.params});
+    msg.textContent = '';
+    (data.items||[]).forEach(v=>grid.appendChild(videoCard(v)));
+    if(!data.items?.length) msg.textContent = 'No videos found for this category.';
+  }catch(e){ msg.textContent = 'Could not load videos: ' + e.message; }
+}
+function videoCard(v){
+  const id = v.id?.videoId || v.id;
+  const sn = v.snippet, st = v.statistics || {};
+  const c = document.createElement('div'); c.className='card';
+  c.innerHTML = `<img class="thumb" src="${sn.thumbnails?.high?.url||sn.thumbnails?.medium?.url||''}">
+    <div class="info"><div style="flex:1">
+      <div class="title">${sn.title}</div>
+      <div class="chan">${sn.channelTitle}</div>
+      <div class="stats">${st.viewCount ? fmtNum(st.viewCount)+' views · ':''}${timeAgo(sn.publishedAt)}</div>
+    </div></div>`;
+  c.onclick = () => watchVideo(id);
+  return c;
+}
+
+// ===== SEARCH =====
+document.getElementById('searchForm').onsubmit = e => {
+  e.preventDefault();
+  const q = document.getElementById('searchInput').value.trim();
+  if(q) runSearch(q);
+};
+async function runSearch(q){
+  showView('searchView');
+  const list = document.getElementById('searchList'); list.innerHTML='';
+  const msg = document.getElementById('msg2'); msg.textContent = 'Searching…';
+  try{
+    const data = await ytFetch('/search', {part:'snippet', q, type:'video', maxResults:20});
+    msg.textContent = '';
+    if(!data.items?.length){ msg.textContent = `No results for "${q}".`; return; }
+    data.items.forEach(v=>{
+      const sn = v.snippet;
+      const row = document.createElement('div'); row.className='row';
+      row.innerHTML = `<img src="${sn.thumbnails?.high?.url||''}">
+        <div><div class="title">${sn.title}</div>
+        <div class="meta">${sn.channelTitle} · ${timeAgo(sn.publishedAt)}</div>
+        <div class="desc">${(sn.description||'').slice(0,140)}</div></div>`;
+      row.onclick = () => watchVideo(v.id.videoId);
+      list.appendChild(row);
+    });
+  }catch(e){ msg.textContent = 'Search failed: ' + e.message; }
+}
+
+// ===== WATCH =====
+let ytPlayer=null, playerReady=false;
+function onYouTubeIframeAPIReady(){ playerReady = true; }
+function loadYT(){
+  return new Promise(res=>{
+    const s = document.createElement('script'); s.src='https://www.youtube.com/iframe_api';
+    document.head.appendChild(s);
+    const t = setInterval(()=>{ if(window.YT && window.YT.Player){ clearInterval(t); res(); } }, 100);
+  });
+}
+let ytApiLoading = loadYT();
+
+async function watchVideo(videoId){
+  showView('watchView');
+  await ytApiLoading;
+  await new Promise(r=>{ const t=setInterval(()=>{ if(window.YT?.Player){clearInterval(t); r();} },100); });
+  if(ytPlayer){ ytPlayer.loadVideoById(videoId); }
+  else{
+    ytPlayer = new YT.Player('ytplayer', { videoId, playerVars:{autoplay:1, rel:0}, width:'100%', height:'100%' });
+  }
+  try{
+    const data = await ytFetch('/videos', {part:'snippet,statistics', id:videoId});
+    const v = data.items?.[0]; if(!v) return;
+    document.getElementById('watchTitle').textContent = v.snippet.title;
+    document.getElementById('watchChan').textContent = v.snippet.channelTitle;
+    document.getElementById('watchStats').textContent = fmtNum(v.statistics.viewCount)+' views';
+    document.getElementById('watchDesc').textContent = v.snippet.description || '';
+    loadUpNext(v.snippet.title);
+  }catch(e){ console.error(e); }
+}
+async function loadUpNext(seedTitle){
+  const up = document.getElementById('upNext'); up.innerHTML = 'Loading…';
+  try{
+    const data = await ytFetch('/search', {part:'snippet', q:seedTitle.split(' ').slice(0,4).join(' '), type:'video', maxResults:12});
+    up.innerHTML = '';
+    (data.items||[]).forEach(v=>{
+      const sn = v.snippet;
+      const row = document.createElement('div'); row.className='row';
+      row.innerHTML = `<img src="${sn.thumbnails?.medium?.url||''}">
+        <div><div class="title">${sn.title}</div><div class="chan">${sn.channelTitle}</div></div>`;
+      row.onclick = () => watchVideo(v.id.videoId);
+      up.appendChild(row);
+    });
+  }catch(e){ up.innerHTML = 'Could not load related videos.'; }
+}
+
+document.getElementById('logo').onclick = () => { showView('browseView'); };
+document.querySelectorAll('.navitem').forEach(el=>{
+  el.onclick = () => { document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active')); loadFeed(el.dataset.feed); };
+});
+
+renderChips();
+loadFeed('home');
+</script>
+</body>
+</html>

@@ -111,7 +111,11 @@
   .icon-maps{background:#10131a}
   .icon-maps svg{display:block}
 
-  /* shared style for every image-based icon (GD, News, AI, Bloxd) */
+  /* Calculator — drawn inline: keypad grid with an amber operator key */
+  .icon-calc{background:#10131a}
+  .icon-calc svg{display:block}
+
+  /* shared style for every image-based icon (GD, News, AI, Bloxd, Minecraft) */
   .icon-img{background:#141821}
   .icon-img img{width:100%;height:100%;object-fit:cover;display:block}
   .img-fallback{display:none;font-size:26px;font-weight:700;letter-spacing:1px}
@@ -129,7 +133,11 @@
   .awake .app:nth-child(4){animation-delay:.32s}
   .awake .app:nth-child(5){animation-delay:.38s}
   .awake .app:nth-child(6){animation-delay:.44s}
-  .awake .cred{animation:rise .5s .5s backwards}
+  .awake .app:nth-child(7){animation-delay:.50s}
+  .awake .app:nth-child(8){animation-delay:.56s}
+  .awake .app:nth-child(9){animation-delay:.62s}
+  .awake .app:nth-child(10){animation-delay:.68s}
+  .awake .cred{animation:rise .5s .74s backwards}
   @keyframes pop{from{opacity:0;transform:translateY(16px) scale(.86)}to{opacity:1;transform:none}}
   @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 
@@ -244,6 +252,15 @@
         <span class="label">Bloxd.io</span>
       </button>
 
+      <button class="app" data-app="minecraft">
+        <span class="icon icon-img">
+          <img src="https://raw.githubusercontent.com/TheCoder-creator/HorizenApp/main/images/Minecraft.png"
+               alt="Minecraft" onerror="this.closest('.icon-img').classList.add('broken')" />
+          <span class="img-fallback">MC</span>
+        </span>
+        <span class="label">Minecraft</span>
+      </button>
+
       <button class="app" data-app="maps">
         <span class="icon icon-maps">
           <svg viewBox="0 0 40 40" width="42" height="42" aria-hidden="true">
@@ -256,6 +273,40 @@
           </svg>
         </span>
         <span class="label">HorizenMaps</span>
+      </button>
+
+      <button class="app" data-app="youtube">
+        <span class="icon icon-img">
+          <img src="https://raw.githubusercontent.com/TheCoder-creator/HorizenApp/main/images/youtube.png"
+               alt="YouTube" onerror="this.closest('.icon-img').classList.add('broken')" />
+          <span class="img-fallback">YT</span>
+        </span>
+        <span class="label">YouTube</span>
+      </button>
+
+      <button class="app" data-app="calculator">
+        <span class="icon icon-calc">
+          <svg viewBox="0 0 40 40" width="42" height="42" aria-hidden="true">
+            <rect x="7" y="4" width="26" height="32" rx="5" fill="none" stroke="#e8ecf4" stroke-width="2"/>
+            <rect x="11" y="8" width="18" height="7" rx="1.6" fill="#f2a33c"/>
+            <circle cx="12.5" cy="21" r="1.9" fill="#e8ecf4"/>
+            <circle cx="20" cy="21" r="1.9" fill="#e8ecf4"/>
+            <circle cx="27.5" cy="21" r="1.9" fill="#e8ecf4"/>
+            <circle cx="12.5" cy="27.5" r="1.9" fill="#e8ecf4"/>
+            <circle cx="20" cy="27.5" r="1.9" fill="#e8ecf4"/>
+            <circle cx="27.5" cy="27.5" r="1.9" fill="#e8ecf4"/>
+          </svg>
+        </span>
+        <span class="label">Calculator</span>
+      </button>
+
+      <button class="app" data-app="wikipedia">
+        <span class="icon icon-img">
+          <img src="https://raw.githubusercontent.com/TheCoder-creator/HorizenApp/main/images/wikipedia.png"
+               alt="Wikipedia" onerror="this.closest('.icon-img').classList.add('broken')" />
+          <span class="img-fallback">W</span>
+        </span>
+        <span class="label">Wikipedia</span>
       </button>
     </div>
 
@@ -332,12 +383,105 @@
   const QUERIES = ['aurora borealis','mountain landscape','starry night sky','ocean waves','forest fog','desert dunes'];
 
   const APPS = {
-    horizen: { name: 'HorizenSearch', url: 'https://horizensearch.com/' },
-    gd:      { name: 'Geometry Dash', url: 'https://horizensearch.com/gd' },
-    news:    { name: 'HorizenNews',   url: 'https://news.horizensearch.com' },
-    ai:      { name: 'HorizenAI',     url: 'https://ai.horizensearch.com' },
-    bloxd:   { name: 'Bloxd.io',      url: 'https://bloxd.com' },
-    maps:    { name: 'HorizenMaps',   url: 'https://maps.horizensearch.com' }
+    horizen:   { name: 'HorizenSearch', url: 'https://horizensearch.com/' },
+    gd:        { name: 'Geometry Dash', url: 'https://horizensearch.com/gd' },
+    news:      { name: 'HorizenNews',   url: 'https://news.horizensearch.com' },
+    ai:        { name: 'HorizenAI',     url: 'https://ai.horizensearch.com' },
+    bloxd:     { name: 'Bloxd.io',      url: 'https://bloxd.com' },
+    minecraft: { name: 'Minecraft',     url: 'https://minecraft.horizensearch.com' },
+    maps:      { name: 'HorizenMaps',   url: 'https://maps.horizensearch.com' },
+    youtube:   { name: 'YouTube',       url: 'https://pages.horizensearch.com/icd5hhxsite' },
+    calculator:{ name: 'Calculator',    url: null },
+    wikipedia: { name: 'Wikipedia',     url: 'https://wikipedia.com' }
+  };
+
+  /* apps that run from raw source code fetched and injected via srcdoc,
+     instead of being iframed directly by URL */
+  const RAW_SOURCES = {
+    maps: 'https://raw.githubusercontent.com/TheCoder-creator/HorizenMaps/refs/heads/main/index.html'
+  };
+
+  /* apps with no external URL at all — their markup is injected via srcdoc directly, no fetch needed */
+  const BUILTIN_SOURCES = {
+    calculator: `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+      <style>
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+        html,body{height:100%;font-family:'Sora',system-ui,sans-serif;background:#0b0d12;color:#f4f5f7}
+        .calc{display:flex;flex-direction:column;height:100%}
+        .display{flex:none;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-end;padding:28px 20px 14px;gap:6px;min-height:120px}
+        .expr{font-size:15px;color:rgba(244,245,247,.45);min-height:18px;word-break:break-all;text-align:right}
+        .result{font-size:48px;font-weight:300;letter-spacing:-1px;word-break:break-all;text-align:right;line-height:1}
+        .pad{flex:1;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(5,1fr);gap:1px;background:rgba(255,255,255,.06)}
+        button{border:0;background:#141821;color:#f4f5f7;font-size:22px;font-weight:500;cursor:pointer;transition:background .12s}
+        button:active{background:#1d2230}
+        .op{color:#f2a33c}
+        .op.active{background:#f2a33c;color:#0b0d12}
+        .fn{color:rgba(244,245,247,.6)}
+        .zero{grid-column:span 2}
+      </style></head>
+      <body>
+        <div class="calc">
+          <div class="display"><div class="expr" id="expr">&nbsp;</div><div class="result" id="result">0</div></div>
+          <div class="pad">
+            <button class="fn" data-act="clear">AC</button>
+            <button class="fn" data-act="sign">±</button>
+            <button class="fn" data-act="percent">%</button>
+            <button class="op" data-op="÷">÷</button>
+            <button data-num="7">7</button><button data-num="8">8</button><button data-num="9">9</button>
+            <button class="op" data-op="×">×</button>
+            <button data-num="4">4</button><button data-num="5">5</button><button data-num="6">6</button>
+            <button class="op" data-op="−">−</button>
+            <button data-num="1">1</button><button data-num="2">2</button><button data-num="3">3</button>
+            <button class="op" data-op="+">+</button>
+            <button class="zero" data-num="0">0</button><button data-num=".">.</button>
+            <button class="op" data-act="equals">=</button>
+          </div>
+        </div>
+        <script>
+          const exprEl=document.getElementById('expr'),resEl=document.getElementById('result');
+          let a=null,op=null,cur='0',fresh=true;
+          const fmt=n=>{ if(!isFinite(n))return'Error'; let s=String(Math.round(n*1e10)/1e10); if(s.length>12)s=Number(n).toExponential(5); return s; };
+          const render=()=>{ resEl.textContent=cur; exprEl.textContent = (a!==null && op) ? fmt(a)+' '+op : '\\u00a0'; };
+          const compute=()=>{ const b=parseFloat(cur); if(a===null||!op)return b;
+            switch(op){case '+':return a+b;case '−':return a-b;case '×':return a*b;case '÷':return b===0?NaN:a/b;} return b; };
+          document.querySelectorAll('[data-num]').forEach(btn=>btn.addEventListener('click',()=>{
+            const n=btn.dataset.num;
+            if(fresh || cur==='0'){ cur = n==='.'?'0.':n; fresh=false; }
+            else if(n==='.'&&cur.includes('.')){ }
+            else cur+=n;
+            render();
+          }));
+          document.querySelectorAll('[data-op]').forEach(btn=>btn.addEventListener('click',()=>{
+            document.querySelectorAll('.op').forEach(b=>b.classList.remove('active'));
+            if(a!==null && op && !fresh){ a=compute(); cur=fmt(a); }
+            else a=parseFloat(cur);
+            op=btn.dataset.op; fresh=true; btn.classList.add('active'); render();
+          }));
+          document.querySelector('[data-act="equals"]').addEventListener('click',()=>{
+            document.querySelectorAll('.op').forEach(b=>b.classList.remove('active'));
+            const r=compute(); cur=fmt(r); a=null; op=null; fresh=true; render();
+          });
+          document.querySelector('[data-act="clear"]').addEventListener('click',()=>{
+            a=null; op=null; cur='0'; fresh=true;
+            document.querySelectorAll('.op').forEach(b=>b.classList.remove('active')); render();
+          });
+          document.querySelector('[data-act="sign"]').addEventListener('click',()=>{
+            cur=fmt(parseFloat(cur)*-1); render();
+          });
+          document.querySelector('[data-act="percent"]').addEventListener('click',()=>{
+            cur=fmt(parseFloat(cur)/100); render();
+          });
+          document.addEventListener('keydown',e=>{
+            if(/[0-9.]/.test(e.key)) document.querySelector('[data-num="'+e.key+'"]').click();
+            else if(e.key==='+') document.querySelector('[data-op="+"]').click();
+            else if(e.key==='-') document.querySelector('[data-op="−"]').click();
+            else if(e.key==='*') document.querySelector('[data-op="×"]').click();
+            else if(e.key==='/'){ e.preventDefault(); document.querySelector('[data-op="÷"]').click(); }
+            else if(e.key==='Enter'||e.key==='=') document.querySelector('[data-act="equals"]').click();
+            else if(e.key==='Escape') document.querySelector('[data-act="clear"]').click();
+          });
+        <\/script>
+      </body></html>`
   };
 
   /* ---------- live clock / date / timezone ---------- */
@@ -401,23 +545,59 @@
   screen.classList.add('awake');
 
   /* ---------- app window (zoom-open iframe) ---------- */
-  let loadedOnce = false, currentUrl = '', slowTimer = null;
+  let loadedOnce = false, currentUrl = '', currentAppId = null, slowTimer = null;
+
+  function startLoading(){
+    loadedOnce = false;
+    loader.classList.remove('off');
+    slowNote.classList.remove('show');
+    clearTimeout(slowTimer);
+    slowTimer = setTimeout(() => slowNote.classList.add('show'), 9000);
+  }
 
   function openApp(id, trigger){
     const app = APPS[id];
     if (!app) return;
     hideCtx();
     appName.textContent = app.name;
-    extLink.href = app.url;
-    currentUrl = app.url;
+    currentUrl = app.url || '';
+    extLink.href = currentUrl || '#';
+    extLink.style.display = app.url ? '' : 'none';
 
-    if (appFrame.getAttribute('src') !== app.url){
-      loadedOnce = false;
+    const raw = RAW_SOURCES[id];
+    const builtin = BUILTIN_SOURCES[id];
+    const alreadyShowing = currentAppId === id;
+
+    if (builtin){
+      if (!alreadyShowing){
+        currentAppId = id;
+        startLoading();
+        appFrame.removeAttribute('src');
+        appFrame.srcdoc = builtin;
+      } else {
+        loader.classList.toggle('off', loadedOnce);
+      }
+    } else if (raw){
+      if (!alreadyShowing){
+        currentAppId = id;
+        startLoading();
+        appFrame.removeAttribute('src');
+        fetch(raw)
+          .then(r => { if (!r.ok) throw new Error('raw fetch ' + r.status); return r.text(); })
+          .then(html => { appFrame.srcdoc = html; })
+          .catch(() => {
+            /* if the raw file can't be fetched (CORS, 404, offline), fall back to iframing the live site */
+            appFrame.removeAttribute('srcdoc');
+            appFrame.src = app.url;
+          });
+      } else {
+        loader.classList.toggle('off', loadedOnce);
+      }
+    } else if (!alreadyShowing){
+      currentAppId = id;
+      appFrame.removeAttribute('srcdoc');
+      startLoading();
       appFrame.src = app.url;
-      loader.classList.remove('off');
-      slowNote.classList.remove('show');
-      clearTimeout(slowTimer);
-      slowTimer = setTimeout(() => slowNote.classList.add('show'), 9000);
     } else {
       loader.classList.toggle('off', loadedOnce);
     }
@@ -442,7 +622,7 @@
   }
 
   appFrame.addEventListener('load', () => {
-    if (!appFrame.getAttribute('src')) return;
+    if (!appFrame.getAttribute('src') && !appFrame.hasAttribute('srcdoc')) return;
     loadedOnce = true;
     loader.classList.add('off');
     slowNote.classList.remove('show');
@@ -503,7 +683,7 @@
   ctxOpen.addEventListener('click', () => { const a = ctxApp; hideCtx(); if (a) openApp(a, null); });
   ctxNew.addEventListener('click', () => {
     const a = ctxApp; hideCtx();
-    if (a && APPS[a]) window.open(APPS[a].url, '_blank', 'noopener');
+    if (a && APPS[a] && APPS[a].url) window.open(APPS[a].url, '_blank', 'noopener');
   });
   document.addEventListener('pointerdown', e => {
     if (ctx.classList.contains('show') && !ctx.contains(e.target)) hideCtx();
